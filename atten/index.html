@@ -876,10 +876,16 @@ function mergeCloudPayload(payload) {
   if (Array.isArray(payload.users) && payload.users.length > 0) {
     const uMap = new Map();
     defaultUsers.forEach(u => uMap.set(u.username, { ...u }));
-    systemUsers.forEach(u => { if (u && u.username && u.username !== "لينا") uMap.set(u.username, { ...u }); });
+    systemUsers.forEach(u => {
+      if (u && u.username && u.username !== "لينا") {
+        const firstOnly = (u.displayName || u.username).trim().split(/\s+/)[0];
+        uMap.set(u.username, { ...u, displayName: u.username === 'admin' ? 'admin' : firstOnly });
+      }
+    });
     payload.users.forEach(u => {
       if (u && u.username && u.username !== "لينا") {
-        uMap.set(u.username, { ...u });
+        const firstOnly = (u.displayName || u.username).trim().split(/\s+/)[0];
+        uMap.set(u.username, { ...u, displayName: u.username === 'admin' ? 'admin' : firstOnly });
         changed = true;
       }
     });
@@ -1023,14 +1029,14 @@ function startRealtimeCloudStream() {
 }
 
 const defaultUsers = [
-  { username: "admin", password: "bmh123", role: "admin", displayName: "المدير العام" },
-  { username: "حبيب", password: "123", role: "supervisor", displayName: "حبيب ياسر جبر" },
-  { username: "باسم", password: "123", role: "supervisor", displayName: "باسم مجهول جواد" },
-  { username: "عمر", password: "123", role: "supervisor", displayName: "عمر أسماعيل" }
+  { username: "admin", password: "bmh123", role: "admin", displayName: "admin" },
+  { username: "حبيب", password: "123", role: "supervisor", displayName: "حبيب" },
+  { username: "باسم", password: "123", role: "supervisor", displayName: "باسم" },
+  { username: "عمر", password: "123", role: "supervisor", displayName: "عمر" }
 ];
 
 let systemUsers = [...defaultUsers];
-let currentUser = { username: "admin", role: "admin", displayName: "المدير العام" };
+let currentUser = { username: "admin", role: "admin", displayName: "admin" };
 
 function isAdmin() {
   return currentUser && currentUser.role === "admin";
@@ -1045,11 +1051,12 @@ function ensureDefaultUsersLoaded() {
     if (Array.isArray(stored)) {
       stored.forEach(u => {
         if (u && u.username && u.username !== "لينا") {
+          const firstOnly = u.username === "admin" ? "admin" : (u.displayName || u.username).trim().split(/\s+/)[0];
           uMap.set(u.username, {
             username: u.username,
             password: u.password || "123",
             role: u.role || "supervisor",
-            displayName: u.displayName || u.username
+            displayName: firstOnly
           });
         }
       });
