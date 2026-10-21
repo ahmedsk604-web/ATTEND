@@ -310,19 +310,10 @@ body {
   <div class="login-card">
     <div class="login-logo">📋</div>
     <h1 class="login-title">نظام الإجازات والغياب</h1>
-    <p class="login-subtitle">اختر حسابك أو اكتب اسم المستخدم وكلمة المرور</p>
-
-    <!-- أزرار اختيار سريع للحساب لتسهيل الدخول من الهاتف -->
-    <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:14px;">
-      <button type="button" class="btn btn-light btn-sm" onclick="quickSelectUser('حبيب')" style="border:1.5px solid #bfdbfe; color:#1e40af; font-weight:800;">👷 حبيب</button>
-      <button type="button" class="btn btn-light btn-sm" onclick="quickSelectUser('باسم')" style="border:1.5px solid #bfdbfe; color:#1e40af; font-weight:800;">👷 باسم</button>
-      <button type="button" class="btn btn-light btn-sm" onclick="quickSelectUser('عمر')" style="border:1.5px solid #bfdbfe; color:#1e40af; font-weight:800;">👷 عمر</button>
-      <button type="button" class="btn btn-light btn-sm" onclick="quickSelectUser('admin')" style="border:1.5px solid #fde68a; background:#fffbeb; color:#92400e; font-weight:800;">👑 admin</button>
-    </div>
-
+    <p class="login-subtitle">سجل دخولك للمتابعة</p>
     <div class="input-group">
       <label class="input-label">اسم المستخدم</label>
-      <input type="text" id="username" class="app-input" placeholder="مثال: حبيب ، باسم ، عمر ، admin" onkeydown="if(event.key==='Enter') checkLogin()">
+      <input type="text" id="username" class="app-input" placeholder="اسم المستخدم" onkeydown="if(event.key==='Enter') checkLogin()">
     </div>
     <div class="input-group">
       <label class="input-label">كلمة المرور</label>
