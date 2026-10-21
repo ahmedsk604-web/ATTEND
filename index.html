@@ -508,7 +508,7 @@ body {
         <div class="card-header" style="border-bottom-color:#dbeafe;">
           <div style="display:flex; align-items:center; gap:8px;">
             <div class="card-title" style="color:#1e40af;">🔑 حسابات مراقبي العمل والإدارة</div>
-            <span id="usersCountBadge" style="font-size:12px; font-weight:bold; background:#dbeafe; color:#1e40af; padding:3px 8px; border-radius:8px;">5 حسابات</span>
+            <span id="usersCountBadge" style="font-size:12px; font-weight:bold; background:#dbeafe; color:#1e40af; padding:3px 8px; border-radius:8px;">4 حسابات</span>
           </div>
           <button class="btn btn-primary btn-sm" onclick="openUserAccountModal()">➕ إضافة حساب</button>
         </div>
@@ -876,9 +876,9 @@ function mergeCloudPayload(payload) {
   if (Array.isArray(payload.users) && payload.users.length > 0) {
     const uMap = new Map();
     defaultUsers.forEach(u => uMap.set(u.username, { ...u }));
-    systemUsers.forEach(u => { if (u && u.username) uMap.set(u.username, { ...u }); });
+    systemUsers.forEach(u => { if (u && u.username && u.username !== "لينا") uMap.set(u.username, { ...u }); });
     payload.users.forEach(u => {
-      if (u && u.username) {
+      if (u && u.username && u.username !== "لينا") {
         uMap.set(u.username, { ...u });
         changed = true;
       }
@@ -1024,7 +1024,6 @@ function startRealtimeCloudStream() {
 
 const defaultUsers = [
   { username: "admin", password: "bmh123", role: "admin", displayName: "المدير العام" },
-  { username: "لينا", password: "93613", role: "admin", displayName: "لينا (الإدارة)" },
   { username: "حبيب", password: "123", role: "supervisor", displayName: "حبيب ياسر جبر" },
   { username: "باسم", password: "123", role: "supervisor", displayName: "باسم مجهول جواد" },
   { username: "عمر", password: "123", role: "supervisor", displayName: "عمر أسماعيل" }
@@ -1045,7 +1044,7 @@ function ensureDefaultUsersLoaded() {
     defaultUsers.forEach(u => uMap.set(u.username, { ...u }));
     if (Array.isArray(stored)) {
       stored.forEach(u => {
-        if (u && u.username) {
+        if (u && u.username && u.username !== "لينا") {
           uMap.set(u.username, {
             username: u.username,
             password: u.password || "123",
