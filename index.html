@@ -310,7 +310,16 @@ body {
   <div class="login-card">
     <div class="login-logo">📋</div>
     <h1 class="login-title">نظام الإجازات والغياب</h1>
-    <p class="login-subtitle">سجل دخولك (مدير النظام أو مراقب العمل)</p>
+    <p class="login-subtitle">اختر حسابك أو اكتب اسم المستخدم وكلمة المرور</p>
+
+    <!-- أزرار اختيار سريع للحساب لتسهيل الدخول من الهاتف -->
+    <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:14px;">
+      <button type="button" class="btn btn-light btn-sm" onclick="quickSelectUser('حبيب')" style="border:1.5px solid #bfdbfe; color:#1e40af; font-weight:800;">👷 حبيب</button>
+      <button type="button" class="btn btn-light btn-sm" onclick="quickSelectUser('باسم')" style="border:1.5px solid #bfdbfe; color:#1e40af; font-weight:800;">👷 باسم</button>
+      <button type="button" class="btn btn-light btn-sm" onclick="quickSelectUser('عمر')" style="border:1.5px solid #bfdbfe; color:#1e40af; font-weight:800;">👷 عمر</button>
+      <button type="button" class="btn btn-light btn-sm" onclick="quickSelectUser('admin')" style="border:1.5px solid #fde68a; background:#fffbeb; color:#92400e; font-weight:800;">👑 admin</button>
+    </div>
+
     <div class="input-group">
       <label class="input-label">اسم المستخدم</label>
       <input type="text" id="username" class="app-input" placeholder="مثال: حبيب ، باسم ، عمر ، admin" onkeydown="if(event.key==='Enter') checkLogin()">
@@ -1148,15 +1157,48 @@ function ensureDefaultWorkersLoaded() {
   }
 }
 
+// تحويل الأرقام العربية/الفارسية (مثل ١٢٣) إلى إنجليزية (123) وتوحيد الحروف
+function normalizeDigits(str = '') {
+  return String(str)
+    .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+    .trim();
+}
+
+function normalizeUserStr(str = '') {
+  return normalizeDigits(str)
+    .toLowerCase()
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ة/g, 'ه');
+}
+
+function quickSelectUser(name) {
+  const uInput = document.getElementById('username');
+  const pInput = document.getElementById('password');
+  if (uInput) uInput.value = name;
+  document.getElementById('loginError').style.display = 'none';
+  if (pInput) {
+    pInput.value = '';
+    pInput.focus();
+  }
+}
+
 // تسجيل الدخول والبقاء متصلاً
 function checkLogin() {
   ensureDefaultUsersLoaded();
-  const user = document.getElementById('username').value.trim();
-  const pass = document.getElementById('password').value.trim();
-  const foundUser = systemUsers.find(u =>
-    (u.username.toLowerCase() === user.toLowerCase() || (u.displayName && u.displayName === user)) &&
-    String(u.password) === String(pass)
-  );
+  const rawUser = document.getElementById('username').value;
+  const rawPass = document.getElementById('password').value;
+  const userNorm = normalizeUserStr(rawUser);
+  const userFirstNorm = userNorm.split(/\s+/)[0];
+  const passNorm = normalizeDigits(rawPass).toLowerCase();
+
+  const foundUser = systemUsers.find(u => {
+    const uNameNorm = normalizeUserStr(u.username);
+    const uDispNorm = normalizeUserStr(u.displayName || u.username);
+    const uPassNorm = normalizeDigits(u.password).toLowerCase();
+    const userMatches = (uNameNorm === userNorm || uDispNorm === userNorm || uNameNorm === userFirstNorm);
+    return userMatches && uPassNorm === passNorm;
+  });
 
   if (foundUser) {
     currentUser = foundUser;
