@@ -310,16 +310,16 @@ body {
   <div class="login-card">
     <div class="login-logo">📋</div>
     <h1 class="login-title">نظام الإجازات والغياب</h1>
-    <p class="login-subtitle">سجل دخولك كمدير للمتابعة والإدخال</p>
+    <p class="login-subtitle">سجل دخولك (مدير النظام أو مراقب العمل)</p>
     <div class="input-group">
       <label class="input-label">اسم المستخدم</label>
-      <input type="text" id="username" class="app-input" placeholder="admin" value="admin">
+      <input type="text" id="username" class="app-input" placeholder="مثال: حبيب ، باسم ، عمر ، admin" onkeydown="if(event.key==='Enter') checkLogin()">
     </div>
     <div class="input-group">
       <label class="input-label">كلمة المرور</label>
-      <input type="password" id="password" class="app-input" placeholder="••••••" value="bmh123">
+      <input type="password" id="password" class="app-input" placeholder="••••••" onkeydown="if(event.key==='Enter') checkLogin()">
     </div>
-    <p id="loginError" style="color:var(--danger); font-size:12px; display:none; margin-bottom:12px;">بيانات الدخول غير صحيحة!</p>
+    <p id="loginError" style="color:var(--danger); font-size:12px; display:none; margin-bottom:12px;">اسم المستخدم أو كلمة المرور غير صحيحة!</p>
     <button class="btn btn-primary" onclick="checkLogin()">دخول للنظام</button>
   </div>
 </div>
@@ -332,7 +332,10 @@ body {
     <div class="header-title-box">
       <div style="font-size:22px;">📊</div>
       <div>
-        <div class="header-title">نظام الغياب والإجازات</div>
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <div class="header-title">نظام الغياب والإجازات</div>
+          <span id="currentUserBadge" style="font-size:11px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:6px; font-weight:800;"></span>
+        </div>
         <span id="syncStatus" style="font-size:11px; color:var(--success); font-weight:600;">● جاهز للعمل</span>
       </div>
     </div>
@@ -356,7 +359,7 @@ body {
       <div class="card">
         <div class="card-header">
           <div class="card-title">✍️ تسجيل حركة غياب أو إجازة</div>
-          <button class="btn btn-primary btn-sm" onclick="openAddWorkerModal()">➕ موظف جديد</button>
+          <button id="btnAddWorkerTop" class="btn btn-primary btn-sm" onclick="openAddWorkerModal()">➕ موظف جديد</button>
         </div>
 
         <!-- خانة حدد الموظف التي تفتح السلايد عند الضغط عليها -->
@@ -497,8 +500,22 @@ body {
       </div>
     </section>
 
-    <!-- التبويب 3: إدارة الموظفين -->
+    <!-- التبويب 3: إدارة الموظفين والحسابات (للمدير فقط) -->
     <section id="tab-workers" class="tab-pane" style="display:none;">
+
+      <!-- بطاقة إدارة حسابات مراقبي العمل والمديرين -->
+      <div class="card" style="border:1.5px solid #bfdbfe; background:#f8fafc;">
+        <div class="card-header" style="border-bottom-color:#dbeafe;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="card-title" style="color:#1e40af;">🔑 حسابات مراقبي العمل والإدارة</div>
+            <span id="usersCountBadge" style="font-size:12px; font-weight:bold; background:#dbeafe; color:#1e40af; padding:3px 8px; border-radius:8px;">5 حسابات</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openUserAccountModal()">➕ إضافة حساب</button>
+        </div>
+        <div id="usersDirectoryList" style="display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+
+      <!-- بطاقة دليل الموظفين والعمال -->
       <div class="card">
         <div class="card-header">
           <div style="display:flex; align-items:center; gap:8px;">
@@ -541,9 +558,9 @@ body {
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       <span>السجلات</span>
     </button>
-    <button class="nav-item" onclick="switchNavTab('workers')">
+    <button id="navWorkersBtn" class="nav-item" onclick="switchNavTab('workers')">
       <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <span>الموظفين</span>
+      <span>الإدارة والموظفين</span>
     </button>
     <button class="nav-item" onclick="switchNavTab('summary')">
       <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -551,6 +568,40 @@ body {
     </button>
   </nav>
 
+</div>
+
+<!-- نافذة منبثقة: إضافة أو تعديل حساب مراقب عمل / مدير -->
+<div id="userAccountModal" class="modal-overlay">
+  <div class="modal-sheet">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+      <h3 id="userModalTitle" style="font-size:17px; font-weight:800; color:#0f172a;">🔑 إضافة حساب جديد</h3>
+      <button onclick="closeUserAccountModal()" style="background:none; border:none; font-size:20px; color:#64748b; cursor:pointer;">✕</button>
+    </div>
+    <input type="hidden" id="editAccountOldUsername">
+    <div class="input-group">
+      <label class="input-label">اسم الدخول (Username)</label>
+      <input type="text" id="accountUsername" class="app-input" placeholder="مثال: حبيب أو باسم أو عمر">
+    </div>
+    <div class="input-group">
+      <label class="input-label">الاسم الكامل الظاهر في السجلات</label>
+      <input type="text" id="accountDisplayName" class="app-input" placeholder="مثال: حبيب ياسر جبر">
+    </div>
+    <div class="input-group">
+      <label class="input-label">كلمة المرور (Password)</label>
+      <input type="text" id="accountPassword" class="app-input" placeholder="مثال: 123">
+    </div>
+    <div class="input-group">
+      <label class="input-label">الصلاحية</label>
+      <select id="accountRole" class="app-select">
+        <option value="supervisor">👷 مراقب عمل (تسجيل غياب وإجازات وتصدير PDF فقط)</option>
+        <option value="admin">👑 مدير النظام (صلاحية كاملة مع الحذف والإدارة)</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:20px;">
+      <button class="btn btn-primary" onclick="confirmSaveUserAccount()">حفظ الحساب</button>
+      <button class="btn btn-light" onclick="closeUserAccountModal()">إلغاء</button>
+    </div>
+  </div>
 </div>
 
 <!-- نافذة منبثقة سريعة: إضافة موظف جديد -->
@@ -821,13 +872,29 @@ function mergeCloudPayload(payload) {
     workers = Array.from(wMap.values());
   }
 
+  // 4. دمج حسابات المستخدمين ومراقبي العمل
+  if (Array.isArray(payload.users) && payload.users.length > 0) {
+    const uMap = new Map();
+    defaultUsers.forEach(u => uMap.set(u.username, { ...u }));
+    systemUsers.forEach(u => { if (u && u.username) uMap.set(u.username, { ...u }); });
+    payload.users.forEach(u => {
+      if (u && u.username) {
+        uMap.set(u.username, { ...u });
+        changed = true;
+      }
+    });
+    systemUsers = Array.from(uMap.values());
+  }
+
   if (changed) {
     localStorage.setItem("attendance_db", JSON.stringify(dbRecords));
     localStorage.setItem("attendance_deleted_ids", JSON.stringify(Array.from(deletedRecordIds)));
     localStorage.setItem("workers_db", JSON.stringify(workers));
+    localStorage.setItem("users_db", JSON.stringify(systemUsers));
     renderRecords();
     renderSummary();
     renderWorkersDirectory();
+    renderUsersDirectory();
     renderWorkerCheckboxes();
   }
   return changed;
@@ -840,7 +907,8 @@ async function pushToCloud() {
     updatedAt: Date.now(),
     records: dbRecords,
     deletedIds: Array.from(deletedRecordIds),
-    workers: workers
+    workers: workers,
+    users: systemUsers
   };
 
   setSyncBadge("🔄 جاري المزامنة السحابية...", "#d97706");
@@ -954,9 +1022,45 @@ function startRealtimeCloudStream() {
   }, 6000);
 }
 
-const systemUsers = [
-  { username: "admin", password: "bmh123", role: "admin" }
+const defaultUsers = [
+  { username: "admin", password: "bmh123", role: "admin", displayName: "المدير العام" },
+  { username: "لينا", password: "93613", role: "admin", displayName: "لينا (الإدارة)" },
+  { username: "حبيب", password: "123", role: "supervisor", displayName: "حبيب ياسر جبر" },
+  { username: "باسم", password: "123", role: "supervisor", displayName: "باسم مجهول جواد" },
+  { username: "عمر", password: "123", role: "supervisor", displayName: "عمر أسماعيل" }
 ];
+
+let systemUsers = [...defaultUsers];
+let currentUser = { username: "admin", role: "admin", displayName: "المدير العام" };
+
+function isAdmin() {
+  return currentUser && currentUser.role === "admin";
+}
+
+function ensureDefaultUsersLoaded() {
+  try {
+    const raw = localStorage.getItem("users_db");
+    const stored = raw ? JSON.parse(raw) : [];
+    const uMap = new Map();
+    defaultUsers.forEach(u => uMap.set(u.username, { ...u }));
+    if (Array.isArray(stored)) {
+      stored.forEach(u => {
+        if (u && u.username) {
+          uMap.set(u.username, {
+            username: u.username,
+            password: u.password || "123",
+            role: u.role || "supervisor",
+            displayName: u.displayName || u.username
+          });
+        }
+      });
+    }
+    systemUsers = Array.from(uMap.values());
+    localStorage.setItem("users_db", JSON.stringify(systemUsers));
+  } catch (e) {
+    systemUsers = [...defaultUsers];
+  }
+}
 
 // دالة مساعدة لتلوين المسمى الوظيفي
 function getRoleBadgeClass(role = '') {
@@ -1040,11 +1144,16 @@ function ensureDefaultWorkersLoaded() {
 
 // تسجيل الدخول والبقاء متصلاً
 function checkLogin() {
+  ensureDefaultUsersLoaded();
   const user = document.getElementById('username').value.trim();
-  const pass = document.getElementById('password').value;
-  const foundUser = systemUsers.find(u => u.username === user && u.password === pass);
+  const pass = document.getElementById('password').value.trim();
+  const foundUser = systemUsers.find(u =>
+    (u.username.toLowerCase() === user.toLowerCase() || (u.displayName && u.displayName === user)) &&
+    String(u.password) === String(pass)
+  );
 
   if (foundUser) {
+    currentUser = foundUser;
     localStorage.setItem('attendance_logged_user', JSON.stringify(foundUser));
     initApp();
   } else {
@@ -1057,7 +1166,26 @@ function logout() {
   location.reload();
 }
 
+function applyUserPermissionsUI() {
+  const badge = document.getElementById('currentUserBadge');
+  if (badge && currentUser) {
+    const icon = isAdmin() ? '👑' : '👷';
+    const roleLabel = isAdmin() ? 'مدير' : 'مراقب عمل';
+    badge.textContent = `${icon} ${currentUser.displayName || currentUser.username} (${roleLabel})`;
+  }
+  const btnAddWorkerTop = document.getElementById('btnAddWorkerTop');
+  if (btnAddWorkerTop) btnAddWorkerTop.style.display = isAdmin() ? 'inline-flex' : 'none';
+
+  const navWorkersBtn = document.getElementById('navWorkersBtn');
+  if (navWorkersBtn) navWorkersBtn.style.display = isAdmin() ? 'flex' : 'none';
+}
+
 function initApp() {
+  try {
+    const savedUser = JSON.parse(localStorage.getItem('attendance_logged_user'));
+    if (savedUser && savedUser.username) currentUser = savedUser;
+  } catch (e) {}
+
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('dateFrom').valueAsDate = new Date();
@@ -1066,8 +1194,10 @@ function initApp() {
     document.getElementById('installBanner').style.display = 'flex';
   }
 
-  // ضمان تحميل الـ 31 عامل فوراً
+  // ضمان تحميل الـ 31 عامل وحسابات المراقبين فوراً
   ensureDefaultWorkersLoaded();
+  ensureDefaultUsersLoaded();
+  applyUserPermissionsUI();
 
   try {
     const savedDeleted = JSON.parse(localStorage.getItem('attendance_deleted_ids')) || [];
@@ -1086,6 +1216,7 @@ function initApp() {
 
   renderWorkerCheckboxes();
   renderWorkersDirectory();
+  renderUsersDirectory();
   renderRecords();
   renderSummary();
 
@@ -1117,6 +1248,7 @@ function renderWorkerCheckboxes() {
   let html = '';
 
   workers.forEach((w, idx) => {
+    if (w.adminOnly && !isAdmin()) return;
     const wName = (w.name || '').toLowerCase();
     const wRole = (w.role || '').toLowerCase();
 
@@ -1320,12 +1452,102 @@ function renderWorkersDirectory() {
 }
 
 function deleteWorker(id, name) {
+  if (!isAdmin()) return alert('عذراً، هذه الصلاحية للمدير فقط!');
   if (!confirm(`هل أنت متأكد من حذف الموظف (${name}) من النظام؟`)) return;
   workers = workers.filter(w => w.id != id);
   localStorage.setItem('workers_db', JSON.stringify(workers));
   renderWorkersDirectory();
   renderWorkerCheckboxes();
   renderSummary();
+  pushToCloud();
+}
+
+// إدارة حسابات مراقبي العمل والمديرين
+function renderUsersDirectory() {
+  const container = document.getElementById('usersDirectoryList');
+  if (!container) return;
+
+  const badge = document.getElementById('usersCountBadge');
+  if (badge) badge.textContent = `${systemUsers.length} حسابات`;
+
+  container.innerHTML = systemUsers.map(u => {
+    const isUAdmin = u.role === 'admin';
+    return `
+      <div style="background:#ffffff; border:1px solid #dbeafe; border-radius:12px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-weight:800; font-size:14px; color:#0f172a;">${isUAdmin ? '👑' : '👷'} ${u.displayName || u.username}</span>
+            <span style="font-size:11px; font-weight:700; padding:2px 7px; border-radius:6px; background:${isUAdmin ? '#fef3c7' : '#e0e7ff'}; color:${isUAdmin ? '#92400e' : '#3730a3'};">
+              ${isUAdmin ? 'مدير النظام' : 'مراقب عمل'}
+            </span>
+          </div>
+          <div style="font-size:12px; color:#475569; margin-top:4px;">
+            اسم الدخول: <b style="color:#1e40af;">${u.username}</b> &nbsp;|&nbsp; كلمة المرور: <b style="color:#0f766e;">${u.password}</b>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-light btn-sm" onclick="openUserAccountModal('${u.username.replace(/'/g, "\\'")}')">✏️ تعديل</button>
+          ${u.username !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUserAccount('${u.username.replace(/'/g, "\\'")}')" style="background:#fee2e2; color:#991b1b;">🗑️</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function openUserAccountModal(username = '') {
+  if (!isAdmin()) return alert('عذراً، إدارة الحسابات من صلاحية المدير فقط!');
+  const existing = username ? systemUsers.find(u => u.username === username) : null;
+  document.getElementById('userModalTitle').textContent = existing ? '✏️ تعديل بيانات الحساب' : '🔑 إضافة حساب مراقب / مدير';
+  document.getElementById('editAccountOldUsername').value = existing ? existing.username : '';
+  document.getElementById('accountUsername').value = existing ? existing.username : '';
+  document.getElementById('accountDisplayName').value = existing ? (existing.displayName || existing.username) : '';
+  document.getElementById('accountPassword').value = existing ? existing.password : '123';
+  document.getElementById('accountRole').value = existing ? (existing.role || 'supervisor') : 'supervisor';
+  document.getElementById('userAccountModal').classList.add('active');
+}
+
+function closeUserAccountModal() {
+  document.getElementById('userAccountModal').classList.remove('active');
+}
+
+function confirmSaveUserAccount() {
+  if (!isAdmin()) return;
+  const oldUser = document.getElementById('editAccountOldUsername').value.trim();
+  const username = document.getElementById('accountUsername').value.trim();
+  const displayName = document.getElementById('accountDisplayName').value.trim() || username;
+  const password = document.getElementById('accountPassword').value.trim();
+  const role = document.getElementById('accountRole').value;
+
+  if (!username || !password) return alert('يرجى إدخال اسم الدخول وكلمة المرور!');
+
+  if (oldUser) {
+    const idx = systemUsers.findIndex(u => u.username === oldUser);
+    if (idx !== -1) {
+      systemUsers[idx] = { username, displayName, password, role };
+    }
+  } else {
+    const existingIdx = systemUsers.findIndex(u => u.username === username);
+    if (existingIdx !== -1) {
+      systemUsers[existingIdx] = { username, displayName, password, role };
+    } else {
+      systemUsers.push({ username, displayName, password, role });
+    }
+  }
+
+  localStorage.setItem('users_db', JSON.stringify(systemUsers));
+  renderUsersDirectory();
+  pushToCloud();
+  closeUserAccountModal();
+  alert(`✅ تم حفظ حساب (${displayName}) ومزامنته سحابياً بنجاح!`);
+}
+
+function deleteUserAccount(username) {
+  if (!isAdmin()) return;
+  if (username === 'admin') return alert('لا يمكن حذف حساب المدير الرئيسي!');
+  if (!confirm(`هل أنت متأكد من حذف الحساب (${username})؟`)) return;
+  systemUsers = systemUsers.filter(u => u.username !== username);
+  localStorage.setItem('users_db', JSON.stringify(systemUsers));
+  renderUsersDirectory();
   pushToCloud();
 }
 
@@ -1358,6 +1580,7 @@ function saveData(andExportPdf = false) {
 
   const finalNotes = (notesInput + noteExtra).trim();
   const newlyAddedRecords = [];
+  const addedByUser = currentUser ? (currentUser.displayName || currentUser.username) : 'المدير العام';
 
   for (let workerName of checkedNames) {
     const workerObj = workers.find(w => w.name === workerName) || {};
@@ -1373,7 +1596,7 @@ function saveData(andExportPdf = false) {
       dateFrom, 
       dateTo,
       notes: finalNotes, 
-      addedBy: 'admin', 
+      addedBy: addedByUser, 
       timestamp: new Date().toISOString()
     };
     dbRecords.unshift(newRec);
@@ -1444,14 +1667,15 @@ function renderRecords() {
           </div>
           <span class="record-badge ${badgeClass}">${r.type} (${r.type==='زمنية' ? 'ساعات' : r.days + ' يوم'})</span>
         </div>
-        <div class="record-dates">
+        <div class="record-dates" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
           <span>📅 ${dateStr}</span>
+          <span style="font-size:11px; background:#f1f5f9; color:#475569; padding:2px 8px; border-radius:6px; font-weight:700;">✍️ بواسطة: ${r.addedBy || 'المدير العام'}</span>
         </div>
         ${r.notes ? `<div class="record-notes">📝 ${r.notes}</div>` : ''}
         <div class="record-actions" style="display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-primary btn-sm" onclick="openPdfFormModal('${r.id}', true)" style="background:#0f766e; color:#fff;">📄 تصدير استمارة PDF</button>
           <button class="btn btn-light btn-sm" onclick="openPdfFormModal('${r.id}', false)" style="border:1px solid #cbd5e1; color:#1e293b;">👁️ معاينة / طباعة</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')" style="background:#fee2e2; color:#991b1b;">🗑️ حذف</button>
+          ${isAdmin() ? `<button class="btn btn-danger btn-sm" onclick="deleteRecord('${r.id}')" style="background:#fee2e2; color:#991b1b;">🗑️ حذف</button>` : ''}
         </div>
       </div>
     `;
@@ -1459,6 +1683,7 @@ function renderRecords() {
 }
 
 function deleteRecord(id) {
+  if (!isAdmin()) return alert('عذراً، حذف السجلات من صلاحية المدير فقط!');
   if (!confirm('هل تريد بالتأكيد حذف هذا السجل؟')) return;
   deletedRecordIds.add(String(id));
   dbRecords = dbRecords.filter(r => String(r.id) !== String(id));
@@ -1514,6 +1739,7 @@ function renderSummary() {
 
 // التنقل بين التبويبات السفلية
 function switchNavTab(tabName) {
+  if (tabName === 'workers' && !isAdmin()) return;
   document.querySelectorAll('.tab-pane').forEach(el => el.style.display = 'none');
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
@@ -1524,7 +1750,10 @@ function switchNavTab(tabName) {
   if (idx !== -1 && navBtns[idx]) navBtns[idx].classList.add('active');
 
   if (tabName === 'records') renderRecords();
-  if (tabName === 'workers') renderWorkersDirectory();
+  if (tabName === 'workers') {
+    renderWorkersDirectory();
+    renderUsersDirectory();
+  }
   if (tabName === 'summary') renderSummary();
 }
 
